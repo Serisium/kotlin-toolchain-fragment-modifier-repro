@@ -58,15 +58,20 @@ accordingly and rerun `./kotlin build` to see `Build successful`
 
 ## Root cause (0.11.1 sources)
 
-- The schema doc (`sources/frontend-api/.../plugins/pluginYamlSchema.kt`,
-  `FragmentDescriptor`) and the user guide
-  (`docs/src/user-guide/plugins/topics/tasks.md`) both say the modifier is
-  the fragment qualifier *without* the `@` symbol.
+- The schema doc
+  ([`pluginYamlSchema.kt` — `FragmentDescriptor.modifier`](https://github.com/JetBrains/kotlin-toolchain/blob/v0.11.1/sources/frontend-api/src/org/jetbrains/amper/frontend/plugins/pluginYamlSchema.kt#L154-L161))
+  and the user guide
+  ([`tasks.md` — "Referencing module fragments"](https://github.com/JetBrains/kotlin-toolchain/blob/v0.11.1/docs/src/user-guide/plugins/topics/tasks.md?plain=1#L216-L226))
+  both say the modifier is the fragment qualifier *without* the `@`
+  symbol (e.g. `modifier: ios`).
 - But fragments store their modifier *with* the prefix:
-  `fragmentSeeds.kt` builds `"@${hierarchyPlatform.pretty}"`.
-- `selectFragmentByDescriptor` (`applyPlugins.kt:359`) compares the
-  user-supplied string verbatim —
+  [`fragmentSeeds.kt:97`](https://github.com/JetBrains/kotlin-toolchain/blob/v0.11.1/sources/frontend/schema/src/org/jetbrains/amper/frontend/aomBuilder/fragmentSeeds.kt#L97)
+  builds `"@${hierarchyPlatform.pretty}"`.
+- [`selectFragmentByDescriptor` (`applyPlugins.kt:149-156`)](https://github.com/JetBrains/kotlin-toolchain/blob/v0.11.1/sources/frontend/schema/src/org/jetbrains/amper/frontend/aomBuilder/plugins/applyPlugins.kt#L149-L156)
+  compares the user-supplied string verbatim —
   `.first { it.isTest == descriptor.isTest && it.modifier == descriptor.modifier }` —
   and carries a FIXME noting that `first` will crash on incorrect user
   input. `"jvm" != "@jvm"`, so the documented form matches nothing and
-  `first` throws.
+  `first` throws. (The stacktrace's `applyPlugins.kt:359` frame exceeds
+  the 258-line source file — a debug-info artifact of the shipped dist;
+  tag `v0.11.1` is the dist's build commit `801e9d4`.)

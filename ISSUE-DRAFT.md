@@ -17,11 +17,12 @@ File manually at <https://youtrack.jetbrains.com/newIssue?project=AMPER>
 The plugin.yaml schema documentation for `generated.<kind>.fragment.modifier`
 says the value is the fragment qualifier **without** the `@` symbol:
 
-- `FragmentDescriptor` KDoc in
-  `sources/frontend-api/src/org/jetbrains/amper/frontend/plugins/pluginYamlSchema.kt`:
-  "the fragment qualifier without the `@` symbol (e.g. `jvm`, `ios`)"
-- `docs/src/user-guide/plugins/topics/tasks.md` likewise documents
-  `modifier: ios` (no `@`), and the shorthand `fragment: native`.
+- `FragmentDescriptor` schema doc in
+  [`pluginYamlSchema.kt#L154-L161` (v0.11.1)](https://github.com/JetBrains/kotlin-toolchain/blob/v0.11.1/sources/frontend-api/src/org/jetbrains/amper/frontend/plugins/pluginYamlSchema.kt#L154-L161):
+  "The fragment qualifier without the `@` symbol (e.g. `jvm`, `ios`, etc.)"
+- [`docs/src/user-guide/plugins/topics/tasks.md#L216-L226` (v0.11.1)](https://github.com/JetBrains/kotlin-toolchain/blob/v0.11.1/docs/src/user-guide/plugins/topics/tasks.md?plain=1#L216-L226)
+  likewise documents `modifier: ios` (no `@`), and the shorthand
+  `fragment: native`.
 
 Following that documentation crashes `./kotlin build` during model reading:
 
@@ -74,10 +75,10 @@ crash.
 ## Root cause
 
 Fragments store their modifier **with** the `@` prefix:
-`sources/frontend/schema/src/org/jetbrains/amper/frontend/aomBuilder/fragmentSeeds.kt`
-builds `"@${hierarchyPlatform.pretty}"`. But `selectFragmentByDescriptor`
-(`sources/frontend/schema/src/org/jetbrains/amper/frontend/aomBuilder/plugins/applyPlugins.kt`,
-line 359 in 0.11.1) compares the user-supplied descriptor string verbatim:
+[`fragmentSeeds.kt#L97` (v0.11.1)](https://github.com/JetBrains/kotlin-toolchain/blob/v0.11.1/sources/frontend/schema/src/org/jetbrains/amper/frontend/aomBuilder/fragmentSeeds.kt#L97)
+builds `"@${hierarchyPlatform.pretty}"`. But `selectFragmentByDescriptor` in
+[`applyPlugins.kt#L149-L156` (v0.11.1)](https://github.com/JetBrains/kotlin-toolchain/blob/v0.11.1/sources/frontend/schema/src/org/jetbrains/amper/frontend/aomBuilder/plugins/applyPlugins.kt#L149-L156)
+compares the user-supplied descriptor string verbatim:
 
 ```kotlin
 .first { it.isTest == descriptor.isTest && it.modifier == descriptor.modifier }
@@ -85,7 +86,9 @@ line 359 in 0.11.1) compares the user-supplied descriptor string verbatim:
 
 `"jvm" != "@jvm"`, so the documented form never matches and `first` throws.
 The call site even carries a FIXME noting that `first` will crash on
-incorrect user input.
+incorrect user input. (The stacktrace's `applyPlugins.kt:359` frame is a
+debug-info artifact of the shipped dist — the v0.11.1 source file, build
+commit `801e9d4`, is only 258 lines.)
 
 So two fixes seem warranted:
 
