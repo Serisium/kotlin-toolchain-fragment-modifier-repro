@@ -1,0 +1,72 @@
+# Kotlin Toolchain 0.11.1: documented `generated.*.fragment.modifier` form crashes model reading
+
+Minimal reproduction for a Kotlin Toolchain (Amper) 0.11.1 bug: writing a
+build plugin's `generated.<kind>.fragment.modifier` the way the docs say
+(fragment qualifier **without** the `@` symbol, e.g. `jvm`) crashes
+`./kotlin build` during model reading with an internal
+`NoSuchElementException`. The ready-to-post YouTrack issue text is in
+[ISSUE-DRAFT.md](ISSUE-DRAFT.md).
+
+## Layout
+
+- `lib/` — trivial `kmp/lib` module, platforms `[ jvm, linuxX64 ]`
+- `build-plugins/repro-plugin/` — trivial `jvm/amper-plugin` with one task
+  that writes a single file to an `@Output` directory, contributed back to
+  the build via `generated.resources` with `fragment: { modifier: jvm }`
+  (the documented form — [plugin.yaml](build-plugins/repro-plugin/plugin.yaml))
+- `kotlin` / `kotlin.bat` — the standard 0.11.1 wrapper
+
+## Reproduce
+
+```bash
+./kotlin build
+```
+
+Observed (0.11.1, macOS 26.3.1 arm64; also reproduced on Linux x86-64):
+
+```
+Internal error: java.util.NoSuchElementException: Collection contains no element matching the predicate.
+
+Please check the build logs for the full stacktrace, and if possible file a bug report at https://youtrack.jetbrains.com/newIssue?project=AMPER
+```
+
+Stacktrace top (from `build/logs/.../debug.log`):
+
+```
+java.util.NoSuchElementException: Collection contains no element matching the predicate.
+	at org.jetbrains.amper.frontend.aomBuilder.plugins.ApplyPluginsKt.selectFragmentByDescriptor(applyPlugins.kt:359)
+	at org.jetbrains.amper.frontend.aomBuilder.plugins.ApplyPluginsKt.collectGeneratedMarks(applyPlugins.kt:198)
+	at org.jetbrains.amper.frontend.aomBuilder.plugins.ApplyPluginsKt.applyPlugins(applyPlugins.kt:55)
+	...
+```
+
+The shorthand form `fragment: jvm` crashes identically.
+
+## Expected
+
+The build succeeds and `generated.txt` lands on the jvm classpath — which is
+exactly what happens with the undocumented `@`-prefixed workaround:
+
+```yaml
+      fragment:
+        modifier: "@jvm"   # works; documented bare form crashes
+```
+
+Edit [build-plugins/repro-plugin/plugin.yaml](build-plugins/repro-plugin/plugin.yaml)
+accordingly and rerun `./kotlin build` to see `Build successful`
+(`generated.txt` appears in `build/artifacts/CompiledJvmArtifact/libjvm/resources-output/`).
+
+## Root cause (0.11.1 sources)
+
+- The schema doc (`sources/frontend-api/.../plugins/pluginYamlSchema.kt`,
+  `FragmentDescriptor`) and the user guide
+  (`docs/src/user-guide/plugins/topics/tasks.md`) both say the modifier is
+  the fragment qualifier *without* the `@` symbol.
+- But fragments store their modifier *with* the prefix:
+  `fragmentSeeds.kt` builds `"@${hierarchyPlatform.pretty}"`.
+- `selectFragmentByDescriptor` (`applyPlugins.kt:359`) compares the
+  user-supplied string verbatim —
+  `.first { it.isTest == descriptor.isTest && it.modifier == descriptor.modifier }` —
+  and carries a FIXME noting that `first` will crash on incorrect user
+  input. `"jvm" != "@jvm"`, so the documented form matches nothing and
+  `first` throws.

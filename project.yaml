@@ -1,0 +1,6 @@
+modules:
+  - ./build-plugins/repro-plugin
+  - ./lib
+
+plugins:
+  - ./build-plugins/repro-plugin

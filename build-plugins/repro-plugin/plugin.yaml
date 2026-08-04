@@ -1,0 +1,14 @@
+tasks:
+  generateResource:
+    action: !repro.generateResource
+      outputDir: ${taskOutputDir}
+
+generated:
+  resources:
+    - directory: ${tasks.generateResource.action.outputDir}
+      fragment:
+        # Documented form: the fragment qualifier "without the @ symbol".
+        # Crashes `./kotlin build` with an internal NoSuchElementException
+        # during model reading. The shorthand `fragment: jvm` crashes the
+        # same way. Workaround: modifier: "@jvm" (or fragment: "@jvm").
+        modifier: jvm
