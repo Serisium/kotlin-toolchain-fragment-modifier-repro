@@ -1,10 +1,12 @@
 # Kotlin Toolchain 0.11.1: documented `generated.*.fragment.modifier` form crashes model reading
 
+> **Filed as [KTC-5646](https://youtrack.jetbrains.com/issue/KTC-5646)** (2026-08-05).
+
 Minimal reproduction for a Kotlin Toolchain (Amper) 0.11.1 bug: writing a
 build plugin's `generated.<kind>.fragment.modifier` the way the docs say
 (fragment qualifier **without** the `@` symbol, e.g. `jvm`) crashes
 `./kotlin build` during model reading with an internal
-`NoSuchElementException`. The ready-to-post YouTrack issue text is in
+`NoSuchElementException`. The issue text as filed is in
 [ISSUE-DRAFT.md](ISSUE-DRAFT.md).
 
 ## Layout

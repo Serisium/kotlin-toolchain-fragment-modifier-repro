@@ -1,7 +1,10 @@
-# YouTrack issue draft — DO NOT auto-post
+# YouTrack issue draft — filed as KTC-5646
 
-File manually at <https://youtrack.jetbrains.com/newIssue?project=AMPER>
-(issues get a `KTC-` ID). Everything below the rule is the issue text.
+Filed 2026-08-05 as <https://youtrack.jetbrains.com/issue/KTC-5646>. Kept for reference;
+everything below the rule is the issue text as drafted.
+
+The filed issue reframes it as a documentation bug (the `@`-form
+is what is actually required).
 
 ---
 
