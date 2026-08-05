@@ -11,6 +11,8 @@ File manually at <https://youtrack.jetbrains.com/newIssue?project=AMPER>
 
 - Kotlin Toolchain 0.11.1 (801e9d4, 2026-06-05), standard vendored wrapper
 - Reproduced on macOS 26.3.1 (arm64) and Linux x86-64 (Fedora)
+- Still reproduces identically on the latest dev build, 0.12.0-dev-4213
+  (26ef291, 2026-08-04), where the workaround also still works
 
 ## Description
 
@@ -89,6 +91,9 @@ The call site even carries a FIXME noting that `first` will crash on
 incorrect user input. (The stacktrace's `applyPlugins.kt:359` frame is a
 debug-info artifact of the shipped dist — the v0.11.1 source file, build
 commit `801e9d4`, is only 258 lines.)
+
+The code is unchanged as of the latest dev build's commit:
+[`applyPlugins.kt#L149-L156` @ 26ef291](https://github.com/JetBrains/kotlin-toolchain/blob/26ef291/sources/frontend/schema/src/org/jetbrains/amper/frontend/aomBuilder/plugins/applyPlugins.kt#L149-L156).
 
 So two fixes seem warranted:
 

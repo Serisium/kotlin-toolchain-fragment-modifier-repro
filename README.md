@@ -42,6 +42,13 @@ java.util.NoSuchElementException: Collection contains no element matching the pr
 
 The shorthand form `fragment: jvm` crashes identically.
 
+Also reproduces unchanged on the latest dev build, **0.12.0-dev-4213**
+(`26ef291`, 2026-08-04): same crash and stacktrace with the documented form,
+and the `"@jvm"` workaround below still builds. (To retest against a dev
+build, point `kotlin_cli_version`/`kotlin_cli_sha256` in the `kotlin`
+wrapper at a version from the
+[dev Maven repo](https://packages.jetbrains.team/maven/p/amper/amper/org/jetbrains/kotlin/kotlin-cli/).)
+
 ## Expected
 
 The build succeeds and `generated.txt` lands on the jvm classpath — which is
